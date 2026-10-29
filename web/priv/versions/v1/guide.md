@@ -234,6 +234,27 @@ where 'Event' in (t.name, p.name) and cs.name = 'BC/AD'
 order by d.from_year
 ```
 
+Every sermon, address, and doctrinal treatise, with its passages. Highlight a discourse by shading its words from `first_word_id` to `last_word_id`:
+
+```sql
+select e.name as discourse,
+       b.name || ' ' || c.number || ':' || v1.number || '-' || v2.number as passage
+from entity e
+join entity_type t on t.id = e.entity_type_id
+join mention m on m.entity_id = e.id
+join mention_kind k on k.id = m.mention_kind_id
+join word w1 on w1.id = m.first_word_id
+join verse v1 on v1.id = w1.verse_id
+join word w2 on w2.id = m.last_word_id
+join verse v2 on v2.id = w2.verse_id
+join chapter c on c.id = v1.chapter_id
+join book b on b.id = c.book_id
+join edition ed on ed.id = c.edition_id
+join language l on l.id = ed.language_id
+where t.name = 'Discourse' and k.name = 'About' and l.name = 'English'
+order by e.name, w1.sequence
+```
+
 Where the Book of Mormon quotes Isaiah:
 
 ```sql
