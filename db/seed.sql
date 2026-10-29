@@ -205,7 +205,8 @@ insert into entity_type (id, parent_id, name) values
     (10, null, 'Object'),
     (11, 10, 'Record'),
     (12, null, 'Office'),
-    (13, null, 'Topic')
+    (13, null, 'Topic'),
+    (14, 9, 'Discourse')
 on conflict do nothing;
 
 insert into mention_kind (id, name) values

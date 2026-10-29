@@ -74,7 +74,7 @@ A span's reference comes from its first and last words: `word.verse_id` to `vers
 ### People, places, and things
 
 - `entity`: a person, group, place, event, object, office, or topic. `name`, `description`, and for places `latitude` and `longitude`. `tipnr` is the entity's id in STEPBible's TIPNR proper-name data, for joining outside data. Many share a name (there are four people named Lehi), so tell them apart by `description`.
-- `entity_type`: Person, Group, Place (with children City, Land, Water, Mountain, Wilderness), Event, Object (with child Record), Office, Topic. `parent_id` gives the parent.
+- `entity_type`: Person, Group, Place (with children City, Land, Water, Mountain, Wilderness), Event (with child Discourse), Object (with child Record), Office, Topic. `parent_id` gives the parent.
 - `entity_name`: other names and titles an entity goes by. `is_title` marks titles like "son of Mormon".
 - `mention`: where the text points at an entity, as a word range. Kind "Refers to" is a word or phrase naming the entity, pronouns included. Kind "About" is a passage about the entity.
 - `relationship`: `subject_id`, `relationship_kind_id`, `object_id`, read as "subject kind object" ("Nephi child of Lehi"). `relationship_kind` has `name`, `reverse_name` ("parent of"), and `two_way` (1 when it reads the same both ways, like "sibling of", stored once). Kinds cover family, membership, leadership, office, part of, took part in, took place at, location, direction, naming, record keeping, and authorship.
@@ -228,8 +228,9 @@ select e.name, d.from_year, d.to_year
 from date d
 join entity e on e.id = d.entity_id
 join entity_type t on t.id = e.entity_type_id
+left join entity_type p on p.id = t.parent_id
 join counting_system cs on cs.id = d.counting_system_id
-where t.name = 'Event' and cs.name = 'BC/AD'
+where 'Event' in (t.name, p.name) and cs.name = 'BC/AD'
 order by d.from_year
 ```
 
