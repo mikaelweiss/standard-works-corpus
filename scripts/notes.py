@@ -5,7 +5,8 @@
 # kind for its target at once, so the kinds stay distinct.
 #
 # Usage:
-#   notes.py plan             batches of jobs not yet applied, as JSON
+#   notes.py plan             numbers of the batches with jobs left, as JSON
+#   notes.py batch <group> <n>  jobs left in batch n of chapters, ranges, or books
 #   notes.py prompt <job>     writes the job's prompt and prints where to answer
 #   notes.py apply <job>      checks the answer and loads it into summary
 #   notes.py status           jobs applied so far
@@ -172,8 +173,6 @@ def is_applied(job):
 def batches(jobs, limit, size):
     out, current, total = [], [], 0
     for job in jobs:
-        if is_applied(job):
-            continue
         weight = size(job)
         if current and (len(current) >= limit[0] or total + weight > limit[1]):
             out.append(current)
@@ -185,7 +184,7 @@ def batches(jobs, limit, size):
     return out
 
 
-def plan(corpus):
+def all_batches(corpus):
     _, ranges, books = all_jobs(corpus)
 
     def book_size(job):
@@ -200,6 +199,14 @@ def plan(corpus):
         'ranges': batches(ranges, RANGE_BATCH, lambda job: corpus.range_words(parse_job(job)[1])),
         'books': batches(books, BOOK_BATCH, book_size),
     }
+
+
+def pending(jobs):
+    return [job for job in jobs if not is_applied(job)]
+
+
+def plan(corpus):
+    return {group: [number for number, jobs in enumerate(found) if pending(jobs)] for group, found in all_batches(corpus).items()}
 
 
 def verse_text(db, first, last):
@@ -430,6 +437,8 @@ def main():
     corpus = Corpus(connect())
     if command == 'plan':
         print(json.dumps(plan(corpus)))
+    elif command == 'batch' and len(sys.argv) == 4:
+        print('\n'.join(pending(all_batches(corpus)[sys.argv[2]][int(sys.argv[3])])) or 'All jobs in this batch are applied.')
     elif command == 'prompt' and len(sys.argv) == 3:
         job = sys.argv[2]
         text = build_prompt(corpus, job)
@@ -444,7 +453,7 @@ def main():
             print(f'{name}: {sum(map(is_applied, jobs))} of {len(jobs)} applied')
         print(f'notes: {corpus.db.execute("select count(*) from summary").fetchone()[0]}')
     else:
-        raise SystemExit('usage: notes.py plan | prompt <job> | apply <job> | status')
+        raise SystemExit('usage: notes.py plan | batch <group> <n> | prompt <job> | apply <job> | status')
 
 
 if __name__ == '__main__':
