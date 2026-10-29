@@ -23,7 +23,8 @@ defmodule CorpusWeb.HomeLive do
     journeys: "journeys",
     settings: "settings",
     dates: "dates",
-    structures: "literary structures"
+    structures: "literary structures",
+    summaries: "study notes"
   ]
 
   def mount(_params, _session, socket) do

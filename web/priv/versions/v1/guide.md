@@ -109,7 +109,19 @@ A span's reference comes from its first and last words: `word.verse_id` to `vers
 
 - `summary`: notes on a chapter, book, or `verse_range`, with `text`. `summary_kind` names the kind (Doctrine, Key verses, Symbols, Setting, and more) and `summary_kind_work` lists which kinds each work has.
 
-The table exists, but this release has no rows in it. Study notes are coming soon.
+AI wrote the notes from the scripture text, from a Latter-day Saint perspective. Chapter notes sit on the English editions' chapters. A kind with nothing to say about a passage, such as Prophecies in a genealogy, has no row.
+
+Every Key verses note in Alma:
+
+```sql
+select c.number, s.text
+from summary s
+join summary_kind k on k.id = s.summary_kind_id
+join chapter c on c.id = s.chapter_id
+join book b on b.id = c.book_id
+where b.name = 'Alma' and k.name = 'Key verses'
+order by c.number
+```
 
 The full table definitions:
 

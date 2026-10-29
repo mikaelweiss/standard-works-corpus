@@ -139,7 +139,7 @@ defmodule CorpusWeb.HomeLiveTest do
       assert has_element?(view, ~s(#scholars-sources a[href$="/CREDITS.md"]))
       assert has_element?(view, ~s(#scholars-data[href="/data"]))
       assert has_element?(view, ~s(#scholars-build[href="/build"]))
-      refute render(view) =~ "study notes"
+      assert has_element?(view, "#scholars-evidence div", "Study notes 4")
     end
   end
 
