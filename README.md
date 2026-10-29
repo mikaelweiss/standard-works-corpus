@@ -14,7 +14,6 @@ One open database of the standard works: the Bible, Book of Mormon, Doctrine and
 - **Dates:** BC/AD and the Book of Mormon's own calendars.
 - **Links:** cross-references, quotes, parallels, and fulfilled prophecies.
 - **Structure:** sentences, clauses, chiasms, and parallelisms.
-- **Study notes:** summaries of each chapter's key verses, doctrine, symbols, setting, and more.
 
 ## What you can do with it
 
