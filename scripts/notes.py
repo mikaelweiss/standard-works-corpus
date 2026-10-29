@@ -36,6 +36,8 @@ RANGE_BATCH = (6, 8000)
 BOOK_BATCH = (6, 30000)
 
 SENTENCE_END = re.compile(r'[.?!]["\'”’)]*$')
+# Agents may not be able to type an em dash, so book names accept a hyphen or en dash in its place.
+DASHED_NAME = re.compile('Joseph Smith[\u2013-](History|Matthew)')
 LIST_MARKER = re.compile(r'(^|\s)([-*•]|#+|\d+[.)])\s')
 
 INSTRUCTIONS = """# Study notes
@@ -363,9 +365,8 @@ def check_text(corpus, text, label, kind_name, limits, inside):
         problems.append('write prose: no line breaks, lists, or markdown')
     if not SENTENCE_END.search(text):
         problems.append('end with a full sentence')
-    checked = re.sub('Joseph Smith[–-]', 'Joseph Smith' + EM_DASH, text)
     covered, cited_inside = [], False
-    for match in corpus.reference.finditer(checked):
+    for match in corpus.reference.finditer(text):
         covered.append(match.span())
         book = corpus.book_ids[ALIASES.get(match.group(1), match.group(1))]
         chapter, verse = int(match.group(2)), int(match.group(3))
@@ -373,12 +374,16 @@ def check_text(corpus, text, label, kind_name, limits, inside):
         if (book, chapter, verse) not in corpus.verses or (book, chapter, end) not in corpus.verses:
             problems.append(f'{match.group(0)} names a verse that does not exist')
         cited_inside |= inside(book, chapter, verse)
-    for match in corpus.unknown_reference.finditer(checked):
+    for match in corpus.unknown_reference.finditer(text):
         if not any(start <= match.start(2) < end for start, end in covered):
             problems.append(f'"{match.group(0)}": write the book\'s full name, such as 1 Nephi 3:7 or D&C 89:3')
     if kind_name == 'Key verses' and not cited_inside:
         problems.append(f'cite at least one verse inside {label}, written in full like 1 Nephi 3:7')
     return [f'{label}, {kind_name}: {problem}' for problem in problems]
+
+
+def with_em_dash(text):
+    return DASHED_NAME.sub(lambda match: f'Joseph Smith{EM_DASH}{match.group(1)}', text)
 
 
 def apply(corpus, job):
@@ -392,6 +397,7 @@ def apply(corpus, job):
     if not isinstance(answer, dict):
         raise SystemExit('the answer must be one JSON object keyed by target')
     label, column, id, kinds, limits = job_target(corpus, job)
+    answer = {with_em_dash(key): value for key, value in answer.items()}
     problems = [f'"{extra}" is not this job\'s target. The target is "{label}"' for extra in set(answer) - {label}]
     notes = answer.get(label)
     rows = []
@@ -406,7 +412,7 @@ def apply(corpus, job):
             if not isinstance(text, str):
                 problems.append(f'{label}: give {name} a string, empty when the target holds nothing of this kind')
                 continue
-            text = text.strip()
+            text = with_em_dash(text.strip())
             if not text and name == 'Key verses':
                 problems.append(f'{label}: Key verses is never empty')
             elif text:
