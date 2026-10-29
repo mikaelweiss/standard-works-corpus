@@ -38,7 +38,7 @@ BOOK_BATCH = (6, 30000)
 SENTENCE_END = re.compile(r'[.?!]["\'”’)]*$')
 # Agents may not be able to type an em dash, so book names accept a hyphen or en dash in its place.
 DASHED_NAME = re.compile('Joseph Smith[\u2013-](History|Matthew)')
-LIST_MARKER = re.compile(r'(^|\s)([-*•]|#+|\d+[.)])\s')
+LIST_MARKER = re.compile(r'^([-*•]|#+|\d+[.)])\s')
 
 INSTRUCTIONS = """# Study notes
 
@@ -398,8 +398,8 @@ def apply(corpus, job):
         raise SystemExit('the answer must be one JSON object keyed by target')
     label, column, id, kinds, limits = job_target(corpus, job)
     answer = {with_em_dash(key): value for key, value in answer.items()}
-    problems = [f'"{extra}" is not this job\'s target. The target is "{label}"' for extra in set(answer) - {label}]
-    notes = answer.get(label)
+    problems = [f'"{extra}" is not this job\'s target. The target is "{label}"' for extra in set(answer) - {with_em_dash(label)}]
+    notes = answer.get(with_em_dash(label))
     rows = []
     if not isinstance(notes, dict):
         problems.append(f'missing target "{label}"')
