@@ -75,9 +75,10 @@ defmodule Corpus.Scripture do
   @doc """
   The chapter at `edition_slug`, `book_slug`, `number`, or nil when there is
   none. Holds the `edition`, `book`, `number`, an optional `heading` verse, the
-  numbered `verses`, and the `previous` and `next` chapters as locations. A
-  verse is `%{id, number, words}` and a word is `%{id, position, before, text,
-  after, supplied}`.
+  numbered `verses`, the `previous` and `next` chapters as locations, and the
+  study `notes` on the chapter and `book_notes` on its book. A verse is `%{id,
+  number, words}`, a word is `%{id, position, before, text, after, supplied}`,
+  and a note is `%{kind, text}`.
   """
   def chapter(edition_slug, book_slug, number) do
     with db when db != nil <- database(),
@@ -99,7 +100,9 @@ defmodule Corpus.Scripture do
         heading: List.first(heading),
         verses: verses,
         previous: previous,
-        next: next
+        next: next,
+        notes: notes(db, "chapter_id", chapter.id),
+        book_notes: notes(db, "book_id", book.id)
       }
     else
       _ -> nil
@@ -130,8 +133,8 @@ defmodule Corpus.Scripture do
   @doc """
   Everything known about the verse `verse_id`: its `location` and
   `reference`, `speeches`, `settings`, `dates`, `named` and `about` entities,
-  passage `links`, `structures`, and named `passages`. Nil when it does not
-  exist.
+  passage `links`, `structures`, and named `passages` with their study
+  `notes`. Nil when it does not exist.
   """
   def verse(verse_id) do
     with db when db != nil <- database(),
@@ -631,14 +634,34 @@ defmodule Corpus.Scripture do
     all(
       db,
       """
-      select t.name, t.first_word_id, t.last_word_id
+      select t.id, t.name, t.first_word_id, t.last_word_id
       #{overlapping("verse_range")}
       where #{@overlaps}
       order by f.sequence
       """,
       window(db, :verse_range, bounds)
     )
-    |> Enum.map(&%{name: &1.name, range: {&1.first_word_id, &1.last_word_id}})
+    |> Enum.map(
+      &%{
+        name: &1.name,
+        range: {&1.first_word_id, &1.last_word_id},
+        notes: notes(db, "verse_range_id", &1.id)
+      }
+    )
+  end
+
+  defp notes(db, column, id) do
+    all(
+      db,
+      """
+      select k.name as kind, s.text
+      from summary s
+      join summary_kind k on k.id = s.summary_kind_id
+      where s.#{column} = ?1
+      order by k.id
+      """,
+      [id]
+    )
   end
 
   # Replaces each `range: {first_word_id, last_word_id}` with a range map,

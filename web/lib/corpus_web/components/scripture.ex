@@ -186,14 +186,46 @@ defmodule CorpusWeb.Scripture do
       </.section>
 
       <.section :if={@details.passages != []} title="Passage">
-        <p :for={passage <- @details.passages} class="text-sm">
-          {passage.name},
-          <.link navigate={reader_path(passage.range.first)} class="hover:underline">
-            {passage.range.reference}
-          </.link>
-        </p>
+        <div :for={passage <- @details.passages}>
+          <p class="text-sm">
+            {passage.name},
+            <.link navigate={reader_path(passage.range.first)} class="hover:underline">
+              {passage.range.reference}
+            </.link>
+          </p>
+          <.notes :if={passage.notes != []} notes={passage.notes} class="mt-2" />
+        </div>
       </.section>
     </section>
+    """
+  end
+
+  @doc "Study notes, one entry per kind that opens to show its text."
+  attr :notes, :list, required: true, doc: "`%{kind, text}` from `Corpus.Scripture`"
+  attr :class, :any, default: nil
+
+  def notes(assigns) do
+    ~H"""
+    <div class={["divide-y border-y", @class]}>
+      <details :for={note <- @notes} class="group">
+        <summary class="flex cursor-pointer list-none items-center justify-between gap-4 py-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
+          {note.kind}
+          <svg
+            viewBox="0 0 24 24"
+            class="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </summary>
+        <p class="pb-4 font-serif text-base leading-relaxed">{note.text}</p>
+      </details>
+    </div>
     """
   end
 

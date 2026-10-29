@@ -45,6 +45,36 @@ defmodule CorpusWeb.ChapterLiveTest do
       refute has_element?(view, ~s(a[rel="next"]))
     end
 
+    test "study notes on the chapter and its book show in kind order", %{conn: conn} do
+      {:ok, view, _html} = live(conn, "/read/kjv/genesis/1")
+
+      assert view |> element("#chapter-notes details:first-child summary") |> render() =~
+               "Doctrine"
+
+      assert has_element?(
+               view,
+               "#chapter-notes details:last-child",
+               "Genesis 1:1 opens the whole Bible."
+             )
+
+      assert has_element?(view, "#book-notes", "Genesis tells how God began His work.")
+
+      {:ok, view, _html} = live(conn, "/read/kjv/genesis/2")
+
+      refute has_element?(view, "#chapter-notes")
+      assert has_element?(view, "#book-notes")
+
+      {:ok, view, _html} = live(conn, "/read/kjv/luke/12")
+
+      refute has_element?(view, "#study-notes")
+    end
+
+    test "a verse's passage shows its study notes", %{conn: conn} do
+      {:ok, view, _html} = live(conn, "/read/kjv/genesis/1?v=1")
+
+      assert has_element?(view, "aside details", "The Creation shows God bringing order.")
+    end
+
     test "a missing book or chapter is not found", %{conn: conn} do
       for path <- [
             "/read/kjv/genesis/3",

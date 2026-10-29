@@ -118,6 +118,29 @@ defmodule CorpusWeb.ChapterLive do
             />
           </div>
 
+          <section
+            :if={@chapter.notes != [] or @chapter.book_notes != []}
+            id="study-notes"
+            aria-labelledby="study-notes-heading"
+            class="mt-14 max-w-prose space-y-8"
+          >
+            <h2 id="study-notes-heading" class="font-serif text-2xl font-semibold tracking-tight">
+              Study notes
+            </h2>
+            <div :if={@chapter.notes != []} id="chapter-notes">
+              <h3 class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {@chapter.book.name} {@chapter.number}
+              </h3>
+              <.notes notes={@chapter.notes} class="mt-2" />
+            </div>
+            <div :if={@chapter.book_notes != []} id="book-notes">
+              <h3 class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {@chapter.book.name} as a whole
+              </h3>
+              <.notes notes={@chapter.book_notes} class="mt-2" />
+            </div>
+          </section>
+
           <nav
             aria-label="Chapters"
             class="mt-12 flex items-center justify-between gap-4 border-t pt-6"

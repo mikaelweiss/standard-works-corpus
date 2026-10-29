@@ -30,7 +30,7 @@ defmodule Corpus.ScriptureTest do
       assert [%{id: 2, name: "Moses"}] = verse.about
       assert [%{name: "Jerusalem"}] = verse.settings
       assert [%{kind: "Chiasm"}] = verse.structures
-      assert [%{name: "The Creation"}] = verse.passages
+      assert [%{name: "The Creation", notes: [%{kind: "Doctrine"}]}] = verse.passages
     end
 
     test "a speech, link, and mention that end before a verse do not show on it" do

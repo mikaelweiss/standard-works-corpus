@@ -183,6 +183,15 @@ defmodule Corpus.Fixture do
     first_word_id integer not null references word,
     last_word_id integer not null references word
   ) strict;
+  create table summary_kind (id integer primary key, name text not null unique, description text not null) strict;
+  create table summary (
+    id integer primary key,
+    summary_kind_id integer not null references summary_kind,
+    chapter_id integer references chapter,
+    book_id integer references book,
+    verse_range_id integer references verse_range,
+    text text not null
+  ) strict;
   create table relationship_kind (
     id integer primary key,
     name text not null unique,
@@ -231,6 +240,7 @@ defmodule Corpus.Fixture do
   insert into link_kind values (1, 'Quotes', 0), (2, 'Parallel', 1), (6, 'Cross-reference', 1);
   insert into structure_kind values (1, 'Chiasm');
   insert into relationship_kind values (1, 'child of', 'parent of', 0);
+  insert into summary_kind values (1, 'Doctrine', 'What the passage teaches.'), (9, 'Key verses', 'The most important verses.');
 
   insert into work values (1, 'Bible'), (2, 'Book of Mormon');
   insert into edition (id, work_id, name) values (1, 1, 'King James Version (1769)'), (2, 2, 'Book of Mormon (2013)');
@@ -398,6 +408,11 @@ defmodule Corpus.Fixture do
     insert into passage_link values (2, 2, #{word(3)}, #{word(6)}, #{word(10)}, #{word(14)});
     insert into structure values (1, 1, #{word(2)}, #{word(9)});
     insert into verse_range values (1, 'The Creation', #{word(2)}, #{word(14)});
+    insert into summary (id, summary_kind_id, chapter_id, book_id, verse_range_id, text) values
+      (1, 9, 1, null, null, 'Genesis 1:1 opens the whole Bible.'),
+      (2, 1, 1, null, null, 'God creates with purpose.'),
+      (3, 1, null, 1, null, 'Genesis tells how God began His work.'),
+      (4, 1, null, null, 1, 'The Creation shows God bringing order.');
     """
   end
 
